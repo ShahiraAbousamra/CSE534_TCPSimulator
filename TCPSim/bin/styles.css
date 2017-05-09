@@ -1,0 +1,60 @@
+#fancytext {
+    -fx-font: 100px Tahoma;
+    -fx-fill: linear-gradient(from 0% 0% to 100% 200%, repeat, aqua 0%, red 50%);
+    -fx-stroke: black;
+    -fx-stroke-width: 1;
+}
+
+#client {
+    -fx-font: 15px Tahoma;
+    -fx-fill: blue;
+}
+
+#server {
+    -fx-font: 15px Tahoma;
+    -fx-fill: red;
+}
+
+#router {
+    -fx-font: 15px Tahoma;
+    -fx-fill: green;
+}
+
+#events {
+    -fx-font: 15px Tahoma;
+    -fx-background: lightcyan;
+}
+
+#stats {
+    -fx-font: 17px Tahoma;
+    -fx-fill: black ;
+    -fx-background: lightsteelblue  ;
+}
+
+#statsTitle {
+    -fx-font: 18px Tahoma;
+    -fx-text-fill: midnightblue  ;
+    -fx-fill: green  ;
+    -fx-background: lightsteelblue  ;
+}
+
+.chart-series-line {    
+    -fx-stroke-width: 2px;
+    -fx-effect: null;
+}
+/*
+.default-color0.chart-series-line { -fx-stroke: #e9967a; } 
+.default-color1.chart-series-line { -fx-stroke: #f0e68c; } 
+.default-color2.chart-series-line { -fx-stroke: #dda0dd; } 
+
+.default-color0.chart-line-symbol { -fx-background-color: #e9967a, white; }
+.default-color1.chart-line-symbol { -fx-background-color: #f0e68c, white; }
+.default-color2.chart-line-symbol { -fx-background-color: #dda0dd, white; }
+ darkcyan*/
+.default-color0.chart-series-line { -fx-stroke: darkcyan; } 
+.default-color1.chart-series-line { -fx-stroke: brown; } 
+.default-color2.chart-series-line { -fx-stroke: orange; } 
+
+.default-color0.chart-line-symbol { -fx-background-color: darkcyan, white; }
+.default-color1.chart-line-symbol { -fx-background-color: brown, white; }
+.default-color2.chart-line-symbol { -fx-background-color: orange, white; }
