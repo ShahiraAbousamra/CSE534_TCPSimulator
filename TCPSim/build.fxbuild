@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="ASCII"?>
 <anttasks:AntTask xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:anttasks="http://org.eclipse.fx.ide.jdt/1.0" buildDirectory="${project}/build">
-  <deploy>
+  <deploy packagingFormat="none">
     <application name="TCPSim" mainclass="TCPSim.TCPSimulator" version="1.0.01"/>
     <info title="TCPSim" vendor="Shahira"/>
   </deploy>
   <signjar/>
+  <manifestEntries name="Class-Path" value="jnetpcap.jar"/>
 </anttasks:AntTask>
