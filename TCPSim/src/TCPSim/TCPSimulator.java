@@ -1,3 +1,9 @@
+/*
+ * Author: Shahira Abousamra   
+ * Under supervision of Prof. Aruna Balasubramanian  
+ * CSE534: Fundamental of Computer Networks, Spring 2017
+ */
+
 package TCPSim;
 
 
@@ -9,6 +15,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Queue;
 import java.util.concurrent.ExecutionException;
@@ -62,9 +70,10 @@ public class TCPSimulator extends Application {
 	TCPCoordinator tcpCoordinator = new TCPCoordinator();
 	public static TextFlow flowEvents = null; 
 	public static TextFlow flowStats = null; 
+	public static ScrollPane scrollEvents = null;
 	RandomAccessFile raf = null; 
 	ArrayList<Long> offsetList = null;	
-	int nLines = 20;
+	int nLines = 100;
 	boolean isEOF = false;
 	int currentOffsetIndx = -1;
 	Stage primaryStage;
@@ -77,7 +86,7 @@ public class TCPSimulator extends Application {
 		Text t = new Text("Hello FX");
 		t.setFont(Font.font("Arial", 60));
 		t.setEffect(new DropShadow(2, 3, 3, Color.RED));
-		//p.setTop(t);
+//		p.setTop(t);
 		
 		GridPane gridPane = new GridPane();
 		gridPane.setHgap(10);
@@ -226,7 +235,7 @@ public class TCPSimulator extends Application {
 		subGridPane2.add(lblRTTUnits2, subGridPane2_currentCol++, subGridPane2_currentRow);
 		subGridPane2_currentRow++;
 
-		final Label lblSwitchingDelay = new Label("Router Switching Delay:");
+		final Label lblSwitchingDelay = new Label("Router Switching Speed:");
 		final TextField txtSwitchingDelay = new TextField();
 		final Label lblSwitchingDelayUnits = new Label("PPS");
 		subGridPane2_currentCol = 0;
@@ -256,7 +265,7 @@ public class TCPSimulator extends Application {
 	    vb_stats.getChildren().add(flowStats);
 		ScrollPane scrollStats = new ScrollPane();
 		scrollStats.setContent(vb_stats);
-		scrollStats.setPrefHeight(220);
+		scrollStats.setPrefHeight(300);
 		scrollStats.setId("stats"); 
 
 		// Events
@@ -265,10 +274,11 @@ public class TCPSimulator extends Application {
 	    flowEvents.setId("events");
 	    flowEvents.setPrefHeight(10);
 		vb_sub.getChildren().add(flowEvents);
-		ScrollPane scrollEvents = new ScrollPane();
+		scrollEvents = new ScrollPane();
 		scrollEvents.setContent(vb_sub);
-		scrollEvents.setPrefHeight(400);
-		scrollEvents.setId("events"); 
+		scrollEvents.setPrefHeight(300);
+		scrollEvents.setPrefWidth(500);
+		scrollEvents.setId("events");
 
 		final Button btnProcessFile = new Button("Process File"/*, new ImageView("image/left.gif")*/);
 		HBox hbButtons = new HBox();
@@ -441,7 +451,7 @@ public class TCPSimulator extends Application {
 					// Parse Switching Delay
 					if(switchingDelay_str.isEmpty()){
 						errorMsgs += errorMsgs.isEmpty()?"":"\r\n";
-						errorMsgs += "Switching Delay Value is Missing";
+						errorMsgs += "Switching Speed Value is Missing";
 					}
 					else{
 						try{
@@ -449,7 +459,7 @@ public class TCPSimulator extends Application {
 						}
 						catch(Exception ex){
 							errorMsgs += errorMsgs.isEmpty()?"":"\r\n";
-							errorMsgs += "Switching Delay value is not valid";						
+							errorMsgs += "Switching Speed value is not valid";						
 						}
 					}					
 					// Parse Max Buffer Size
@@ -575,45 +585,6 @@ public class TCPSimulator extends Application {
             	showNext();
             	showChart();
             	showChartInflight();
-            	
-                
-//                Task<Void> longTask = new Task<Void>() {
-//                    @Override
-//                    protected Void call() throws Exception {
-//                    	TCPCoordinator.useFile(txtPcapFile.getText().trim());
-//                    	return null;
-//                    }
-//                };
-//            	
-//                new Thread(longTask).start();
-//                longTask.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
-//                    @Override
-//                    public void handle(WorkerStateEvent t) {
-//                    	Alert alert = new Alert(AlertType.INFORMATION);
-//                    	alert.setTitle("Status");
-//                    	alert.setHeaderText("Done!");
-//                    	//alert.setContentText(errorMsgs);
-//                    	
-//
-//                    	alert.showAndWait();
-//                    	
-//                    	TCPCoordinator.eventLogWriter.close();
-//                    	
-//                    	
-////            			if(TCPCoordinator.loqQ.size() >= TCPCoordinator.maxlogQSize)
-////							try {
-////								TCPSimulator.addEventLog(TCPCoordinator.loqQ);
-////							} catch (InterruptedException e) {
-////								// TODO Auto-generated catch block
-////								e.printStackTrace();
-////							} catch (ExecutionException e) {
-////								// TODO Auto-generated catch block
-////								e.printStackTrace();
-////							}
-//
-////                        taskUpdateStage.hide();
-//                    }
-//                });
 			} catch (Exception e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -643,8 +614,19 @@ public class TCPSimulator extends Application {
 		});
 
 		Scene scene = new Scene(p);
-//		scene.getStylesheets().add("./styles.css");
-		scene.getStylesheets().add(getClass().getResource("../styles.css").toExternalForm());
+		try{
+			scene.getStylesheets().add(getClass().getResource("../styles.css").toExternalForm());
+		}
+		catch(Exception e){
+			// used to handle loading css from jar
+			Path currentRelativePath = Paths.get("");
+			String s = "file:///" + currentRelativePath.toAbsolutePath().toString() + "/styles.css";
+			s = s.replace("\\", "/");
+			s = s.replace(" ", "%20");
+			System.out.println(s);
+			scene.getStylesheets().add(s);
+		}
+//		scene.getStylesheets().add(getClass().getResource("./styles.css").toExternalForm());
 		
 		primaryStage.setScene(scene);
 		primaryStage.setMaximized(true); //setFullScreen(true);
@@ -753,7 +735,7 @@ public class TCPSimulator extends Application {
 					e.printStackTrace();
 				}
 			}
-			
+			scrollEvents.setVvalue(0);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -822,6 +804,7 @@ public class TCPSimulator extends Application {
 			sb.append("Lost Acks Count = " + tcpStatistics.lostAcksCount+ "\r\n");
 			sb.append("Total Re-transmission Count = " + tcpStatistics.retransmissionsCount + "\r\n");
 			sb.append("Timeout Count = " + tcpStatistics.timeoutCount+ "\r\n");
+			sb.append("Effective Timeout Count = " + tcpStatistics.timeoutCount_eff+ "\r\n");			
 			sb.append("Triple Duplicate Ack Count = " + tcpStatistics.tripleDupAckCount+ "\r\n");
 			sb.append("Average RTT (ms) = " + tcpStatistics.averageRTT+ "\r\n");
 			Text txt1 = new Text(sb.toString());
@@ -931,7 +914,18 @@ public class TCPSimulator extends Application {
 
 
 	    Scene scene = new Scene(p);
-		scene.getStylesheets().add(getClass().getResource("../styles.css").toExternalForm());
+		try{
+			scene.getStylesheets().add(getClass().getResource("../styles.css").toExternalForm());
+		}
+		catch(Exception e){
+			// used to handle loading css from jar
+			Path currentRelativePath = Paths.get("");
+			String s = "file:///" + currentRelativePath.toAbsolutePath().toString() + "/styles.css";
+			s = s.replace("\\", "/");
+			s = s.replace(" ", "%20");
+			System.out.println(s);
+			scene.getStylesheets().add(s);
+		}
 	    dialogStage.setScene(scene);
 	    dialogStage.show();
 	}
@@ -988,11 +982,89 @@ public class TCPSimulator extends Application {
 
 
 	    Scene scene = new Scene(p);
-		scene.getStylesheets().add(getClass().getResource("../styles.css").toExternalForm());
+		try{
+			scene.getStylesheets().add(getClass().getResource("../styles.css").toExternalForm());
+		}
+		catch(Exception e){
+			// used to handle loading css from jar
+			Path currentRelativePath = Paths.get("");
+			String s = "file:///" + currentRelativePath.toAbsolutePath().toString() + "/styles.css";
+			s = s.replace("\\", "/");
+			s = s.replace(" ", "%20");
+			System.out.println(s);
+			scene.getStylesheets().add(s);
+		}
 	    dialogStage.setScene(scene);
 	    dialogStage.show();
 	}
 
+	public void showChartInflightTime()
+	{
+		Stage dialogStage = new Stage();
+	    dialogStage.setTitle("In Flight Packets Statistics w/Time");
+	    dialogStage.initModality(Modality.NONE);
+	    dialogStage.initOwner(primaryStage);
+		BorderPane p = new BorderPane();
+		
+		NumberAxis xAxis = new NumberAxis();
+		xAxis.setLabel("Time (ms)");
+		// Customize the X-Axis, so points are scattered uniformly
+		xAxis.setAutoRanging(false);
+		xAxis.setLowerBound(0);
+		 
+		// Create the Y-Axis
+		NumberAxis yAxis = new NumberAxis();
+		yAxis.setLabel("In Flight Size ( in MSS )");
+		// Create the LineChart
+		LineChart<Number,Number> chart = new LineChart<>(xAxis, yAxis);
+		// Set the Title for the Chart
+		chart.setTitle("Actual Congestion Window Growth Chart");
+		// Set the Data for the Chart
+		XYChart.Series<Number, Number> series1 = new XYChart.Series<Number, Number>();
+		XYChart.Series<Number, Number> series2 = new XYChart.Series<Number, Number>();
+		ObservableList<XYChart.Series<Number, Number>> chartData = FXCollections.<XYChart.Series<Number, Number>>observableArrayList();
+		long rttNumMax1 = 0, rttNumMax2 = 0;
+		if(TCPCoordinator.inflightTimeLogWriter_client != null){
+			rttNumMax1 = readChartData(TCPCoordinator.inflightTimeLogFilename_client, series1 );
+			series1.setName("Client");
+			chartData.add(series1);
+		}
+		if(TCPCoordinator.inflightTimeLogWriter_server != null){
+			rttNumMax2 = readChartData(TCPCoordinator.inflightTimeLogFilename_server, series2 );
+			series2.setName("Server");
+			chartData.add(series2);
+		}
+		
+		long rttNum = Math.max(rttNumMax1, rttNumMax2);
+		xAxis.setUpperBound(rttNum);
+		long n = (long)(rttNum/20);
+		xAxis.setTickUnit(n);
+
+		chart.setData(chartData);
+//		chart.setLegendVisible(false);
+//		chart.setCreateSymbols(false);
+		
+		
+		
+		p.setCenter(chart);
+
+
+	    Scene scene = new Scene(p);
+		try{
+			scene.getStylesheets().add(getClass().getResource("../styles.css").toExternalForm());
+		}
+		catch(Exception e){
+			// used to handle loading css from jar
+			Path currentRelativePath = Paths.get("");
+			String s = "file:///" + currentRelativePath.toAbsolutePath().toString() + "/styles.css";
+			s = s.replace("\\", "/");
+			s = s.replace(" ", "%20");
+			System.out.println(s);
+			scene.getStylesheets().add(s);
+		}
+	    dialogStage.setScene(scene);
+	    dialogStage.show();
+	}
 	public long  readChartData(String filename, XYChart.Series<Number, Number> series1){
 //		XYChart.Series<Number, Number> series1 = new XYChart.Series<Number, Number>();
 		
@@ -1041,5 +1113,55 @@ public class TCPSimulator extends Application {
 			}
 		}
 		return rttNum ;
+	}
+
+	public double  readChartDataTime(String filename, XYChart.Series<Number, Number> series1){
+//		XYChart.Series<Number, Number> series1 = new XYChart.Series<Number, Number>();
+		
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new FileReader(filename));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return 0;
+		}
+		double time = 0;
+		long count = 0;
+		long batchCount = 1000;
+		ArrayList<XYChart.Data<Number, Number>> data = new ArrayList<XYChart.Data<Number, Number>>(); 
+		while(true){
+			try {
+				String str = br.readLine();
+				if(str == null || str.isEmpty()){
+					if(data.size() > 0)
+						series1.getData().addAll(data);
+					break;
+				}
+				time = Double.parseDouble(str);
+				str = br.readLine();
+				if(str == null || str.isEmpty()){
+					if(data.size() > 0)
+						series1.getData().addAll(data);
+					break;
+				}
+				long cwndSize = Long.parseLong(str);
+				data.add(new XYChart.Data<Number, Number>(time, cwndSize));
+//				rttNum++;
+				count++;
+				if(count >= batchCount){
+					series1.getData().addAll(data);
+					data= new ArrayList<XYChart.Data<Number, Number>>();
+					count = 0;
+				}
+			} catch (EOFException ex) {
+				// TODO Auto-generated catch block
+				break;
+			}catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return time ;
 	}
 }

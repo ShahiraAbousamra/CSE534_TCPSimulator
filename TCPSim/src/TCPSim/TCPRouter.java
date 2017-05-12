@@ -39,8 +39,11 @@ public class TCPRouter {
 		
 		if(event.eventType == EventType.FORWARD || event.eventType == EventType.FORWARD_ACK ){
 			
+			// Update the remainingBufferSize
+			remainingBufferSizeInBytes += event.packet.headerLength + event.packet.payloadLength; 
+
 			if(event.eventType == EventType.FORWARD) 
-				TCPCoordinator.logEvent(event, currentTime, "Router", "Destination = " + event.packet.destIP_str + ", \tSequence = " + event.packet.seqNum + ", \tPayload Length = " + event.packet.payloadLength, cssID);
+				TCPCoordinator.logEvent(event, currentTime, "Router", "Destination = " + event.packet.destIP_str + ", \tSequence = " + event.packet.seqNum + ", \tPayload Length = " + event.packet.payloadLength , cssID);
 			else
 				TCPCoordinator.logEvent(event, currentTime, "Router", "Destination = " + event.packet.destIP_str + ", \tAck = " + event.packet.ackNum , cssID);
 			// Progress time
@@ -49,8 +52,6 @@ public class TCPRouter {
 			// progress time with the switching delay
 			currentTime += switchingDelay;
 			
-			// Update the remainingBufferSize
-			remainingBufferSizeInBytes += event.packet.headerLength + event.packet.payloadLength; 
 			
 			TCPEvent replyEvent = null;
 			// Create event for the other end to receive

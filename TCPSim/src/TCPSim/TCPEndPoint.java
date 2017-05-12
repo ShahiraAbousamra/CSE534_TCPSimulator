@@ -115,7 +115,7 @@ public class TCPEndPoint {
 			// if cannot receive the packet then drop it 
 			// check there is space in receive buffer
 			if(!receiveCWnd.canReceivePacket((int)packet.seqNum, packet.headerLength+packet.payloadLength)){
-				TCPCoordinator.logEvent(event, currentTime, this.ip, "<Drop Packet> Source = " + event.packet.srcIP_str + ", \tSequence = " + event.packet.seqNum + ", \tPayload Length = " + event.packet.payloadLength, cssID);
+				TCPCoordinator.logEvent(event, currentTime, this.ip, "<Ignore Packet> Source = " + event.packet.srcIP_str + ", \tSequence = " + event.packet.seqNum + ", \tPayload Length = " + event.packet.payloadLength, cssID);
 				return null;
 			}
 			TCPCoordinator.logEvent(event, currentTime, this.ip, "Source = " + event.packet.srcIP_str + ", \tSequence = " + event.packet.seqNum + ", \tPayload Length = " + event.packet.payloadLength, cssID);

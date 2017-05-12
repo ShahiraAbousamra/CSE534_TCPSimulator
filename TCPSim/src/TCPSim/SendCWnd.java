@@ -169,7 +169,13 @@ public class SendCWnd {
 			return;
 		}
 		if(event == CWndUpdateEventType.TIMEOUT){
+			int x = 0;
+			if(currentCWndSize != initialCWndSize)
+				TCPCoordinator.tcpStatistics.timeoutCount_eff++;
+			else
+				x++;
 			if(currentPhase == CWndPhase.SLOW_START){	// set ssthreshold to half current cwnd, set cwnd = initial cwnd
+				if(currentCWndSize != initialCWndSize)
 				slowStartThreshold = (int)currentCWndSize/2;
 				updateCWndSize(initialCWndSize);
 				if(initialCWndSize >= slowStartThreshold)

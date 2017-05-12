@@ -25,6 +25,7 @@ public class TCPCoordinator {
 	public static ArrayList<MyTCPFlow> flowsList ;
 	public static long currentTime = 0;
 	public static double rtt = 0; // input
+	public static double rtt_original = 0; // input
 	public static double rttDiv2 = 0; // calc from input
 	public static double rtt1 = 0; // input
 	public static double rtt1Div2 = 0; // calc from input
@@ -55,6 +56,10 @@ public class TCPCoordinator {
 	public static String inflightLogFilename_client = "";
 	public static PrintWriter inflightLogWriter_server = null;
 	public static String inflightLogFilename_server = "";
+	public static PrintWriter inflightTimeLogWriter_client = null;
+	public static String inflightTimeLogFilename_client = "";
+	public static PrintWriter inflightTimeLogWriter_server = null;
+	public static String inflightTimeLogFilename_server = "";
 		
 //	public static Queue<LogEvent> loqQ = new LinkedList<LogEvent>();
 //	public static int maxlogQSize = 500;
@@ -88,6 +93,14 @@ public class TCPCoordinator {
 			inflightLogWriter_server.close();
 			inflightLogWriter_server= null;
 		}
+		if(inflightTimeLogWriter_client != null){
+			inflightTimeLogWriter_client.close();
+			inflightTimeLogWriter_client= null;
+		}
+		if(inflightTimeLogWriter_server != null){
+			inflightTimeLogWriter_server.close();
+			inflightTimeLogWriter_server= null;
+		}
 		tcpStatistics = new TCPStatistics(); 
 		TCPCoordinator.traceFilePath = traceFilePath;
     	analysis_pcap_tcp pcapAnalyzer = new analysis_pcap_tcp();
@@ -103,6 +116,7 @@ public class TCPCoordinator {
 	
 	public static void setConfig(TopologyConfig topologyConfig, double rtt, double bandwidth, int mss, int initialCongWindowSize, int slowStartThresh, double lossRate){
 		TCPCoordinator.rtt = rtt;
+		TCPCoordinator.rtt_original = rtt;
 		TCPCoordinator.rttDiv2 = rtt/2;
 		TCPCoordinator.bandwidth = bandwidth/8; // Kbps convert to Bytes per ms
 		TCPCoordinator.MSS = mss;
@@ -124,6 +138,7 @@ public class TCPCoordinator {
 		TCPCoordinator.rtt2Div2 = rtt2/2;
 		TCPCoordinator.switchingDelay= 1/switchingDelay * 1000; // ms per packet
 		TCPCoordinator.rtt = rtt1+TCPCoordinator.switchingDelay*2+rtt2;
+		TCPCoordinator.rtt_original = rtt;
 		TCPCoordinator.rttDiv2 = rtt/2;
 		TCPCoordinator.bandwidth = bandwidth/8; // Kbps convert to Bytes per ms
 		TCPCoordinator.MSS = mss;
@@ -380,9 +395,10 @@ public class TCPCoordinator {
 	// return -1 if no more payload packet
 	public static int getNextPayloadIndx(int flowID, int currentPacketIndx){
 		ArrayList<MyTCPPacket> packets = flowsList.get(flowID-1).packets;
+		MyTCPPacket packetLast = packets.get(currentPacketIndx);
 		for(int i=currentPacketIndx+1; i<packets.size(); i++){
 			MyTCPPacket packet = packets.get(i);
-			if(packet.payloadLength > 0){
+			if(packet.payloadLength > 0 && packetLast.seqNum < packet.seqNum ){
 				return i;
 			}
 		}
@@ -543,6 +559,7 @@ public class TCPCoordinator {
 	}
 
 	public static void logPacketsInFlightPerRTT(boolean isClient, long cwndSize, String endPointName, double currentTime){
+		logPacketsInFlightInTime(isClient, cwndSize, endPointName, currentTime);
 		PrintWriter writer;
 		if(isClient)
 			writer = inflightLogWriter_client ;
@@ -609,4 +626,72 @@ public class TCPCoordinator {
 		
 	}
 
+	public static void logPacketsInFlightInTime(boolean isClient, long cwndSize, String endPointName, double currentTime){
+		PrintWriter writer;
+		if(isClient)
+			writer = inflightTimeLogWriter_client ;
+		else
+			writer = inflightTimeLogWriter_server ;
+		String filename;
+		if(writer == null){
+			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+			Date date = new Date();
+			filename = traceFilePath.substring(0, traceFilePath.length()-5) + "_inflightTimeLog_" + endPointName + dateFormat.format(date) + ".txt";
+			try {
+				writer = new PrintWriter(filename);
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if(isClient){
+				inflightTimeLogWriter_client = writer;
+				inflightTimeLogFilename_client = filename;
+			}
+			else{
+				inflightTimeLogWriter_server = writer;
+				inflightTimeLogFilename_server = filename;
+			}
+			String formattedText = "";
+			formattedText = String.format("%s\r\n", 0);
+			formattedText += String.format("%s\r\n", cwndSize);
+			writer.write(formattedText);
+			writer.flush();
+			return;
+		}
+		int x = 0;
+		if(cwndSize < 0)
+			x++;
+		long rttCount = 0;
+		if(isClient && tcpStatistics.prevInflightTimeSize_client != cwndSize){
+			if(tcpStatistics.prevInflightTimeSize_client  - cwndSize > 10 )
+				x++;
+			double timeDiff = currentTime - tcpStatistics.timeLastInflightTimeRecorded_client;
+			long RTTDiff = (long)(timeDiff/rtt_original);
+			if(RTTDiff <= 0)
+				return;
+			tcpStatistics.rttCountInflightTime_client += RTTDiff;
+			rttCount = tcpStatistics.rttCountInflightTime_client ;
+			tcpStatistics.timeLastInflightTimeRecorded_client = currentTime ;
+			tcpStatistics.prevInflightTimeSize_client = cwndSize;
+		}
+		else if(!isClient && tcpStatistics.prevInflightTimeSize_server != cwndSize){
+			double timeDiff = currentTime - tcpStatistics.timeLastInflightTimeRecorded_server;
+			long RTTDiff = (long)(timeDiff/rtt_original);
+			if(RTTDiff <= 0)
+				return;
+			tcpStatistics.rttCountInflightTime_server += RTTDiff;
+			rttCount = tcpStatistics.rttCountInflightTime_server ;
+			tcpStatistics.timeLastInflightTimeRecorded_server = currentTime ;
+			tcpStatistics.prevInflightTimeSize_server = cwndSize;
+		}
+		else
+			return;
+		
+		String formattedText = "";
+		formattedText = String.format("%s\r\n", rttCount);
+		formattedText += String.format("%s\r\n", cwndSize);
+		writer.write(formattedText);
+		writer.flush();
+		
+	}
 }
